@@ -1,4 +1,4 @@
-name: nanofase-optimize
+name: nanofase-calibration
 channels:
   - conda-forge
 dependencies:

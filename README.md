@@ -42,7 +42,7 @@ When the calibration has finished, the final calibration parameters are stored i
 To save memory, the optimization script deletes input and output data after each iteration has completed. This means that, if the script crashes, you won't have any information on how far the iteration got. To avoid this, you can specify the `--logall` flag, which results in a `.npz` being written to the `results/` directory for each iteration (of which there could be 1000s), with the run ID hash as the file name. The disadvantage of this is that these files could take up a significant amount of disk space. To inspect these, use NumPy:
 
 ```bash
-(nanofase-calibraiton) $ python
+(nanofase-calibration) $ python
 >>> import numpy as np
 >>> result = np.load('results/<run_id_hash>.npz')
 >>> cost = result['cost']
