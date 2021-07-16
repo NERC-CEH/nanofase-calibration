@@ -11,7 +11,7 @@ To use the example [optimize.py](./scripts/optimize.py) script with the example 
 ```bash
 $ git clone https://github.com/nerc-ceh/nanofase-calibration
 $ cd nanofase-calibration
-$ mkdir config_cache data_cache run_stdout results
+$ mkdir config_cache data_cache run_stdout results output_scratch
 ```
 Make sure the model has been compiled and that an executable resides somewhere, let's say at `/path/to/model/exe`.
 

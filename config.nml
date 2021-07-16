@@ -25,7 +25,7 @@ calibration_run = .false.
 &data
 input_file = "data/thames/data_tio2_2015.nc"            ! Irrelevant here as will be overwritten by batch config
 constants_file = "data/thames/constants_tio2.nml"       ! Likewise 
-output_path = "/home/sharrison/code/_nanofase-calibration/output/"
+output_path = "./output_scratch"
 /
 
 &output
@@ -49,13 +49,11 @@ start_date = "2015-01-01"                               ! Start date for model r
 epsilon = 1e-50,                                        ! Precision for numerical simulations
 error_output = .true.                                   ! Should error handling be turned on? Be careful if not, things might go wrong!
 trigger_warnings = .false.                              ! Should errors that are non-critical (warnings) be triggered (printed to the console)?
-log_file_path = "/home/sharrison/code/_nanofase-calibration/log/"  ! Where to place model logs
+log_file_path = "./log/"  ! Where to place model logs
 warm_up_period = 0                                      ! Warm up period before main simulation begin. *Not yet implemented.*
-! simulation_mask = "/home/sharrison/code/_nanofase-calibration/calibration_mask.nc"
 /
 
 &checkpoint
-checkpoint_file = "/home/sharrison/code/_nanofase-calibration/checkpoint_1sc.dat"
 save_checkpoint = .false.                               ! Save a checkpoint file when the run is finished? Defaults to false
 reinstate_checkpoint = .false.                           ! Reinstate a checkpoint from checkpoint_file? Defaults to false
 preserve_timestep = .false.                             ! Should the timestep from the checkpoint be used as a starting timestep in a reinstated run?
