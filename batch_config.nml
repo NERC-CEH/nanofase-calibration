@@ -1,0 +1,20 @@
+&batch_config
+n_chunks = 4
+batch_description = "Thames, no NM, 2009-2012. Sediment calibration run"
+/
+
+&chunks
+input_files = "/home/sharrison/code/_nanofase-calibration/data_cache/2009_no-emissions.nc", 
+    "/home/sharrison/code/_nanofase-calibration/data_cache/2010_no-emissions.nc",
+    "/home/sharrison/code/_nanofase-calibration/data_cache/2011_no-emissions.nc",
+    "/home/sharrison/code/_nanofase-calibration/data_cache/2012_no-emissions.nc",
+constants_files = "/home/sharrison/code/_nanofase-calibration/constants_cache/constants_1sc.nml",
+    "/home/sharrison/code/_nanofase-calibration/constants_cache/constants_1sc.nml",
+    "/home/sharrison/code/_nanofase-calibration/constants_cache/constants_1sc.nml",
+    "/home/sharrison/code/_nanofase-calibration/constants_cache/constants_1sc.nml",
+start_dates = "2009-01-01",
+    "2010-01-01",
+    "2011-01-01",
+    "2012-01-01",
+n_timesteps_per_chunk = 365, 365, 365, 366
+/

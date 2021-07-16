@@ -1,0 +1,11 @@
+name: nanofase-optimize
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - numpy
+  - f90nml
+  - netCDF4
+  - pip
+  - pip:
+    - optimparallel

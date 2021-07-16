@@ -1,0 +1,6 @@
+config_cache/
+data_cache/
+results/
+run_stdout/
+optimize.log
+run.out
