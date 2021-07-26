@@ -1,31 +1,26 @@
-! Config file to run the model for TiO2, Thames catchment, year 2015.
+! Config file to run the model for TiO2, Thames catchment
 ! A quirk of Fortran namelist files is that the size of arrays must be present in the
 ! namelist file before the variable itself, and so they are stored in this separate
 ! allocatable array sizes group.
 &allocatable_array_sizes
-n_soil_layers = 3                                       ! Number of soil layers to model
+n_soil_layers = 1                                       ! Number of soil layers to model
 n_sediment_layers = 4                                   ! Number of sediment layers to model
 n_nm_size_classes = 1                                   ! Number of NM size classes
 n_spm_size_classes = 5                                  ! Number of SPM size classes
-n_fractional_compositions = 4                           ! Number of fractional compositions for sediment
+n_fractional_compositions = 2                           ! Number of fractional compositions for sediment
 /
 
 &nanomaterial
 nm_size_classes = 100e-9                                ! Diameter of NM in each binned size class [m]
-n_nm_forms = 4                                          ! Number of NM forms (free, matrix-embedded, etc)
+n_nm_forms = 1                                          ! Number of NM forms (core, shell, corona etc)
 n_nm_extra_states = 2                                   ! Number of extra NM states, other than heteroaggregated to SPM
 / 
-
-! Run the model in calibration mode? Documentation here: [doc/calibration.md](../doc/calibration.md)
-&calibrate
-calibration_run = .false.
-/
 
 ! Paths to data. For info on compiling data for the NanoFASE model, see the nanofase-data repo: https://github.com/NERC-CEH/nanofase-data
 &data
 input_file = "data/thames/data_tio2_2015.nc"            ! Irrelevant here as will be overwritten by batch config
 constants_file = "data/thames/constants_tio2.nml"       ! Likewise 
-output_path = "./output_scratch"
+output_path = "./output/"
 /
 
 &output
@@ -35,9 +30,8 @@ write_metadata_as_comment = .false.
 include_sediment_layer_breakdown = .false.
 include_soil_layer_breakdown = .false.
 include_soil_state_breakdown = .false.
-include_sediment_fluxes = .true.
-include_soil_erosion = .true.
-! output_rate_constant_summary = .true.
+include_sediment_fluxes = .false.
+include_soil_erosion = .false.
 /
 
 &run
@@ -49,24 +43,19 @@ start_date = "2015-01-01"                               ! Start date for model r
 epsilon = 1e-50,                                        ! Precision for numerical simulations
 error_output = .true.                                   ! Should error handling be turned on? Be careful if not, things might go wrong!
 trigger_warnings = .false.                              ! Should errors that are non-critical (warnings) be triggered (printed to the console)?
-log_file_path = "./log/"  ! Where to place model logs
+log_file_path = "./log/"                                ! Where to place model logs
 warm_up_period = 0                                      ! Warm up period before main simulation begin. *Not yet implemented.*
+ignore_nm = .true.                                      ! Ignore NM as we're only calibrating sediment
 /
 
 &checkpoint
 save_checkpoint = .false.                               ! Save a checkpoint file when the run is finished? Defaults to false
-reinstate_checkpoint = .false.                           ! Reinstate a checkpoint from checkpoint_file? Defaults to false
+reinstate_checkpoint = .false.                          ! Reinstate a checkpoint from checkpoint_file? Defaults to false
 preserve_timestep = .false.                             ! Should the timestep from the checkpoint be used as a starting timestep in a reinstated run?
 /
 
-&steady_state
-run_to_steady_state = .false.
-mode = 'sediment_size_distribution'
-delta = 1e-4                                            ! Delta value to test whether at steady state
-/
-
 &soil
-soil_layer_depth = 0.05, 0.15, 0.2                      ! Depth of each soil layer. Array of length &allocatable_array_sizes > n_soil_layers
+soil_layer_depth = 0.4                                  ! Depth of each soil layer. Array of length &allocatable_array_sizes > n_soil_layers
 include_bioturbation = .true.                           ! Should bioturbation be modelled?
 include_attachment = .true.                             ! Should attachment be modelled?
 /
@@ -75,7 +64,7 @@ include_attachment = .true.                             ! Should attachment be m
 sediment_layer_depth = 0.01, 0.01, 0.01, 0.01           ! Depth of each sediment layer. Array of length &allocatable_array_sizes > n_sediment_layers
 spm_size_classes = 0.002e-3, 0.06e-3, 0.2e-3, 0.6e-3, 2.0e-3    ! Upper bound of the SPM diameter in each binned size class [m]
 include_bed_sediment = .true.                           ! Should bed sediment be modelled?
-sediment_particle_densities = 1500, 2600, 2600, 2600    ! Density of sediment particles in each fractional composition class [kg/m3]
+sediment_particle_densities = 1500                      ! Density of sediment particles in each fractional composition class [kg/m3]
 /
 
 &sources

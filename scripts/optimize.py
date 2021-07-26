@@ -58,17 +58,17 @@ def cost(df):
     return cost
 
 # Read in the data to calibrate using, including site metadata
-df_meta = pd.read_csv(f'{cal_dir}obs_data/sites_meta.csv')
-df_obs = pd.read_csv(f'{cal_dir}obs_data/sites_obs.csv')
+df_meta = pd.read_csv(os.path.join(cal_dir, 'obs_data/sites_meta.csv'))
+df_obs = pd.read_csv(os.path.join(cal_dir, 'obs_data/sites_obs.csv'), parse_dates=['datetime', 'date'])
 
 # Create new config files for this run
-with open(f'{cal_dir}batch_config.nml', 'r') as f:
+with open(os.path.join(cal_dir, 'batch_config.nml'), 'r') as f:
     bc_template = f90nml.read(f)
-with open(f'{cal_dir}config.nml', 'r') as f:
+with open(os.path.join(cal_dir, 'config.nml'), 'r') as f:
     config_template = f90nml.read(f)
 
 # Get a mask for the catchment shape and count the cells
-nc_subcatchment = Dataset(f'{cal_dir}data/{args.yearrange[0]}_no-emissions.nc', 'r')
+nc_subcatchment = Dataset(os.path.join(cal_dir, 'data', f'{args.yearrange[0]}_no-emissions.nc'), 'r')
 var = nc_subcatchment['flow_dir'][:,:]
 catchment_mask = var.mask
 catchment_shape = var.shape
@@ -86,7 +86,7 @@ def nf_model(params):
     
     # Log this run
     print(f'Running the model for run ID {run_id}')
-    with open(f'{cal_dir}optimize.log', 'a') as f:
+    with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
         f.write(f'Running the model for run ID {run_id}\n')
     
     # Copy the config templates
@@ -95,7 +95,7 @@ def nf_model(params):
     config = config_template.copy()
     config['run']['output_hash'] = run_id
     # Write the config file
-    config_path = f'{cal_dir}config_cache/config_{run_id}.nml'
+    config_path = os.path.join(cal_dir, f'config_cache/config_{run_id}.nml')
     with open(config_path, 'w') as f:
         config.write(f)
     
@@ -105,13 +105,13 @@ def nf_model(params):
     
     # Make a copy of the template NetCDFs to add this iteration's params to
     for year in year_range:
-        dst_path = f'{cal_dir}data_cache/{year}_no-emissions_{run_id}.nc'
-        shutil.copy(f'{cal_dir}data/{year}_no-emissions.nc', dst_path)
+        dst_path = os.path.join(cal_dir, f'data_cache/{year}_no-emissions_{run_id}.nc')
+        shutil.copy(os.path.join(cal_dir, f'data/{year}_no-emissions.nc'), dst_path)
         # Update the batch config to point to this file
         bc['chunks']['input_files'].append(dst_path)
         
     # Write the batch config file
-    bc_path = f'{cal_dir}config_cache/batch_config_{run_id}.nml'
+    bc_path = os.path.join(cal_dir, f'config_cache/batch_config_{run_id}.nml')
     with open(bc_path, 'w') as f:
         bc.write(f)
     
@@ -129,47 +129,51 @@ def nf_model(params):
         # Now add this variable to the NetCDF file, placing a copy in the cache
         for year in year_range:
             # Then create the new variables
-            nc = Dataset(f'{cal_dir}data_cache/{year}_no-emissions_{run_id}.nc', 'r+')
+            nc = Dataset(os.path.join(cal_dir, f'data_cache/{year}_no-emissions_{run_id}.nc'), 'r+')
             var = nc.createVariable(param, datatype=float, dimensions=('y','x'))
             var[:] = param_2d
             nc.close()
             
     # Run the model and save the output to the run_stdout dir
-    # with open(f'{cal_dir}run_stdout/run_{run_id}.out', 'w') as file:
-    #     subprocess.run([
-    #         exe_path,
-    #         config_path,
-    #         bc_path,
-    #     ], check=True, text=True, stdout=file, stderr=file)
+    with open(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'), 'w') as file:
+        subprocess.run([
+            exe_path,
+            config_path,
+            bc_path,
+        ], check=True, text=True, stdout=file, stderr=file)
 
     # # Remove the output file - we only need it if there was an error, and 
     # # an error will have already trigerred an exception
-    # os.remove(f'{cal_dir}run_stdout/run_{run_id}.out')
+    os.remove(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'))
     
     # # Evaluate the output and return the cost
-    # df_out = pd.read_csv(f'{cal_dir}output/output_water{run_id}.csv',
-    #                      parse_dates=['datetime'])
+    df_out = pd.read_csv(os.path.join(cal_dir, f'output/output_water{run_id}.csv'),
+                         parse_dates=['datetime'])
     # Return the cost, calculated from obs and sim data
-    # cost_ = cost(df_out)
+    cost_ = cost(df_out)
     cost_ = 42
 
     # If we're logging the params and costs of all iterations, then do so 
     if args.log_all:
-        with open(f'{cal_dir}results/{run_id}.npz', 'wb') as f:
+        with open(os.path.join(cal_dir, f'results/{run_id}.npz', 'wb')) as f:
             np.savez_compressed(f, cost=cost_, params=params0)
 
     # Remove the NetCDF files for this run
     for year in year_range:
-        os.remove(f'{cal_dir}data_cache/{year}_no-emissions_{run_id}.nc')
+        os.remove(os.path.join(cal_dir, f'data_cache/{year}_no-emissions_{run_id}.nc'))
+
+    # And the config
+    os.remove(os.path.join(cal_dir, f'config_cache/config_{run_id}.nml'))
+    os.remove(os.path.join(cal_dir, f'config_cache/batch_config_{run_id}.nml'))
             
     # Also remove the output file - we can recreate this once we've got the calibrated params
-    if os.path.isfile(f'{cal_dir}output/output_water{run_id}.csv'):
-        os.remove(f'{cal_dir}output/output_water{run_id}.csv')
-        os.remove(f'{cal_dir}output/output_sediment{run_id}.csv')
-        os.remove(f'{cal_dir}output/output_soil{run_id}.csv')
-        os.remove(f'{cal_dir}output/summary{run_id}.md')
+    if os.path.isfile(os.path.join(cal_dir, f'output/output_water{run_id}.csv')):
+        os.remove(os.path.join(cal_dir, f'output/output_water{run_id}.csv'))
+        os.remove(os.path.join(cal_dir, f'output/output_sediment{run_id}.csv'))
+        os.remove(os.path.join(cal_dir, f'output/output_soil{run_id}.csv'))
+        os.remove(os.path.join(cal_dir, f'output/summary{run_id}.md'))
     
-    with open(f'{cal_dir}optimize.log', 'a') as f:
+    with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
         f.write(f'Cost for {run_id}: {cost_}\n')
     return cost_
 
@@ -178,7 +182,7 @@ def nf_model(params):
 # ------------
 # Perform the optimization, using the x0.nc NetCDF file for initial guesses at
 # the parameters
-data0 = f'{cal_dir}data/x0.nc'
+data0 = os.path.join(cal_dir, 'data/x0.nc')
 params0 = np.empty((0,))
 # For each parameter, get it from the NetCDF file, flatten it and then add to the params0 array
 for param in param_names:
@@ -188,16 +192,18 @@ for param in param_names:
     params0 = np.concatenate((params0, flat))
 
 # Actually do the optimization
-result = minimize_parallel(fun=nf_model, x0=params0,
-                           parallel={ 'max_workers': max_workers, 'verbose': True})
+# result = minimize_parallel(fun=nf_model, x0=params0,
+#                            parallel={'max_workers': max_workers, 'verbose': True})
+
+nf_model(params0)
 
 # Write the result to the optimize log
-with open(f'{cal_dir}optimize.log', 'a') as f:
+with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
     f.write(f'Final cost (MAE): {result.fun}\n')
     f.write(f'Number of evaluations: {result.nfev}\n')
     f.write(f'Number of iterations: {result.nit}\n')
     f.write(f'Successful? {result.success}')
 
 # Write params to file, so we can re-run the optimized result
-with open(f'{cal_dir}results/optimized_params.npy', 'wb') as f:
+with open(os.path.join(cal_dir, 'results/optimized_params.npy'), 'wb') as f:
     np.save(f, result.x)

@@ -2,5 +2,7 @@ config_cache/
 data_cache/
 results/
 run_stdout/
+output/
 optimize.log
 run.out
+gmon.out

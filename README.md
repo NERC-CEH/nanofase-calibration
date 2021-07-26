@@ -11,7 +11,7 @@ To use the example [optimize.py](./scripts/optimize.py) script with the example 
 ```bash
 $ git clone https://github.com/nerc-ceh/nanofase-calibration
 $ cd nanofase-calibration
-$ mkdir config_cache data_cache run_stdout results output_scratch
+$ mkdir config_cache data_cache run_stdout results output
 ```
 Make sure the model has been compiled and that an executable resides somewhere, let's say at `/path/to/model/exe`.
 
@@ -73,6 +73,10 @@ optional arguments:
                         year range to run calibration for (inclusive)
 ```
 
+### Cleaning up
+
+The [`clean`](./clean) bash script is provided to clean up results and the cache from a calibration run.
+
 ## How the calibration works
 
 The model calibration is done on 8 parameters, which control suspended sediment concentrations. Each of these parameters is allowed to vary spatially (but not temporally), and so the total number of parameters that are being calibrated is 8 multiplied by the number of grid cells in your geographical scenario (which, as you've probably guessed, could amount to *a lot* of parameters). Suspended sediment observation data at given sampling sites is used to calibrate the model against. The general goal of the calibration is to minimise the *mean absolute error* of the simulated data vs the observation data, and this minimisation is done in parallel by the [optimparallel](https://pypi.org/project/optimparallel/) package. Internally, this package uses the [L-BFGS-B method](https://en.wikipedia.org/wiki/Limited-memory_BFGS), thereby providing a parallel version of `scipy.optimize.minimize(method='L-BFGS-B')`.
@@ -86,5 +90,5 @@ Initial values for these parameters should be provided in the `data/x0.nc` file.
 - Depending on your model scenario (e.g. spatial and temporal extent), the calibration could take *a very long time*. For a desktop computer calibrating the Thames catchment for 2009 to 2012, we could be talking months or years. Two approaches are suggested to alleviate this:
 	- The optimize.py script assumes you want to vary each calibration parameter (of which there are 8) for each grid cell (of which, in the Thames, there are 634). Instead, you could assume that the calibration parameters are constant over the whole catchment, or split the catchment into subcatchments and assume the calibration parameters are constant over each of these.
     - Find a high-performance computer with a ridiculous number of cores (>100s). The optimize.py script automatically uses the maximum number of cores that it can (or you can specify the maximum number to use by passing specifying the `--maxworkers` argument). It will still probably take a while.
-- Make sure the compiled model executable you are using was compiled with speed optimization in mind. If you are using the example Makefile, then use `make release` to achieve this. This can more than halve model run times.
+- Make sure the compiled model executable you are using was compiled with speed optimization in mind. If you are using the example Makefile, then use `make release` or `make fast` to achieve this. This can more than halve model run times.
 - The optimize.py script has only been tested using Bash and may need modifications to use on different systems, particularly Windows.

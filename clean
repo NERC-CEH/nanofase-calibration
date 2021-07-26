@@ -1,0 +1,7 @@
+#!/bin/bash
+rm $PWD/config_cache/*
+rm $PWD/data_cache/*
+rm $PWD/run_stdout/*
+rm $PWD/optimize.log
+rm $PWD/results/optimized_params.npy
+rm $PWD/output/*

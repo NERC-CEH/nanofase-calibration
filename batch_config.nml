@@ -4,10 +4,10 @@ batch_description = "Thames, no NM, 2009-2012. Sediment calibration run"
 /
 
 &chunks
-input_files = "./data_cache/2009_no-emissions.nc", 
-    "./data_cache/2010_no-emissions.nc",
-    "./data_cache/2011_no-emissions.nc",
-    "./data_cache/2012_no-emissions.nc",
+input_files = "./data/2009_no-emissions.nc", 
+    "./data/2010_no-emissions.nc",
+    "./data/2011_no-emissions.nc",
+    "./data/2012_no-emissions.nc",
 constants_files = "./data/constants_1sc.nml",
     "./data/constants_1sc.nml",
     "./data/constants_1sc.nml",
