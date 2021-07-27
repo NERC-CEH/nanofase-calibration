@@ -6,3 +6,6 @@ output/
 optimize.log
 run.out
 gmon.out
+*.err
+*.out
+scripts/nf_slurm*
