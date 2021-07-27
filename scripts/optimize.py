@@ -29,6 +29,7 @@ cal_dir = args.caldir
 exe_path = args.exepath
 max_workers = args.maxworkers
 year_range = range(args.yearrange[0], args.yearrange[1]+1)
+out_dir = args.outdir if args.outdir is not None else cal_dir
 
 # The parameters we wish to optimize 
 param_names = ['resuspension_alpha', 'resuspension_beta', 'sediment_transport_a', 'sediment_transport_c',
@@ -152,7 +153,7 @@ def nf_model(params, test=None):
         os.remove(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'))
         
         # Evaluate the output and return the cost
-        df_out = pd.read_csv(os.path.join(cal_dir, f'output/output_water{run_id}.csv'),
+        df_out = pd.read_csv(os.path.join(out_dir, f'output_water{run_id}.csv'),
                             parse_dates=['datetime'])
         # Return the cost, calculated from obs and sim data
         cost_ = cost(df_out)
@@ -175,12 +176,11 @@ def nf_model(params, test=None):
     os.remove(os.path.join(cal_dir, f'config_cache/batch_config_{run_id}.nml'))
             
     # Also remove the output file - we can recreate this once we've got the calibrated params
-    out_dir = args.outdir if args.outdir is not None else cal_dir
-    if os.path.isfile(os.path.join(out_dir, f'output/output_water{run_id}.csv')):
-        os.remove(os.path.join(out_dir, f'output/output_water{run_id}.csv'))
-        os.remove(os.path.join(out_dir, f'output/output_sediment{run_id}.csv'))
-        os.remove(os.path.join(out_dir, f'output/output_soil{run_id}.csv'))
-        os.remove(os.path.join(out_dir, f'output/summary{run_id}.md'))
+    if os.path.isfile(os.path.join(out_dir, f'output_water{run_id}.csv')):
+        os.remove(os.path.join(out_dir, f'output_water{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'output_sediment{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'output_soil{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'summary{run_id}.md'))
     
     with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
         f.write(f'Cost for {run_id}: {cost_}\n')
@@ -221,4 +221,3 @@ if args.test in [None, 'parallel']:
 elif args.test == 'model':
     cost = nf_model(params0)
     print(f'Cost: {cost}')
-
