@@ -15,6 +15,7 @@ from optimparallel import minimize_parallel
 parser = argparse.ArgumentParser(description='Calibrate the NanoFASE model')
 parser.add_argument('--caldir', '-c', help='path to the calibration directory', default='./')
 parser.add_argument('--exepath', '-x', help='path to the model exe file', default='./nanofase')
+parser.add_argument('--outdir', '-o', help='path to store output data')
 parser.add_argument('--logall', '-l', dest='log_all', action='store_true')
 parser.add_argument('--no-logall', dest='log_all', action='store_true')
 parser.add_argument('--maxworkers', '-mw', help='maximum number of processes that can be used',
@@ -94,6 +95,8 @@ def nf_model(params, test=None):
     bc['chunks']['input_files'] = []
     config = config_template.copy()
     config['run']['output_hash'] = run_id
+    if args.outdir is not None:
+        config['data']['output_path'] = args.outdir
     # Write the config file
     config_path = os.path.join(cal_dir, f'config_cache/config_{run_id}.nml')
     with open(config_path, 'w') as f:
@@ -144,11 +147,11 @@ def nf_model(params, test=None):
                 bc_path,
             ], check=True, text=True, stdout=file, stderr=file)
 
-        # # Remove the output file - we only need it if there was an error, and 
-        # # an error will have already trigerred an exception
+        # Remove the output file - we only need it if there was an error, and 
+        # an error will have already trigerred an exception
         os.remove(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'))
         
-        # # Evaluate the output and return the cost
+        # Evaluate the output and return the cost
         df_out = pd.read_csv(os.path.join(cal_dir, f'output/output_water{run_id}.csv'),
                             parse_dates=['datetime'])
         # Return the cost, calculated from obs and sim data
@@ -172,11 +175,12 @@ def nf_model(params, test=None):
     os.remove(os.path.join(cal_dir, f'config_cache/batch_config_{run_id}.nml'))
             
     # Also remove the output file - we can recreate this once we've got the calibrated params
-    if os.path.isfile(os.path.join(cal_dir, f'output/output_water{run_id}.csv')):
-        os.remove(os.path.join(cal_dir, f'output/output_water{run_id}.csv'))
-        os.remove(os.path.join(cal_dir, f'output/output_sediment{run_id}.csv'))
-        os.remove(os.path.join(cal_dir, f'output/output_soil{run_id}.csv'))
-        os.remove(os.path.join(cal_dir, f'output/summary{run_id}.md'))
+    out_dir = args.outdir if args.outdir is not None else cal_dir
+    if os.path.isfile(os.path.join(out_dir, f'output/output_water{run_id}.csv')):
+        os.remove(os.path.join(out_dir, f'output/output_water{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'output/output_sediment{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'output/output_soil{run_id}.csv'))
+        os.remove(os.path.join(out_dir, f'output/summary{run_id}.md'))
     
     with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
         f.write(f'Cost for {run_id}: {cost_}\n')
@@ -216,4 +220,5 @@ if args.test in [None, 'parallel']:
 # If this is a model test, just run the model once
 elif args.test == 'model':
     cost = nf_model(params0)
-    print(cost)
+    print(f'Cost: {cost}')
+

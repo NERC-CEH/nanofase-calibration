@@ -6,4 +6,4 @@
 #SBATCH --time-min=00:05:00
 #SBATCH --ntasks=8
 
-python ../optimize.py --caldir ../ --exepath ~/nanofase/bin/main --test parallel --maxworkers 8
+python scripts/optimize.py --caldir . --exepath ~/nanofase/bin/main --test parallel --maxworkers 8
