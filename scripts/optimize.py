@@ -151,7 +151,6 @@ def nf_model(params):
                          parse_dates=['datetime'])
     # Return the cost, calculated from obs and sim data
     cost_ = cost(df_out)
-    cost_ = 42
 
     # If we're logging the params and costs of all iterations, then do so 
     if args.log_all:
@@ -195,15 +194,16 @@ for param in param_names:
 # result = minimize_parallel(fun=nf_model, x0=params0,
 #                            parallel={'max_workers': max_workers, 'verbose': True})
 
-nf_model(params0)
+cost = nf_model(params0)
+print(cost)
 
-# Write the result to the optimize log
-with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
-    f.write(f'Final cost (MAE): {result.fun}\n')
-    f.write(f'Number of evaluations: {result.nfev}\n')
-    f.write(f'Number of iterations: {result.nit}\n')
-    f.write(f'Successful? {result.success}')
+# # Write the result to the optimize log
+# with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
+#     f.write(f'Final cost (MAE): {result.fun}\n')
+#     f.write(f'Number of evaluations: {result.nfev}\n')
+#     f.write(f'Number of iterations: {result.nit}\n')
+#     f.write(f'Successful? {result.success}')
 
-# Write params to file, so we can re-run the optimized result
-with open(os.path.join(cal_dir, 'results/optimized_params.npy'), 'wb') as f:
-    np.save(f, result.x)
+# # Write params to file, so we can re-run the optimized result
+# with open(os.path.join(cal_dir, 'results/optimized_params.npy'), 'wb') as f:
+#     np.save(f, result.x)

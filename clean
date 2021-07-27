@@ -1,7 +1,19 @@
 #!/bin/bash
-rm $PWD/config_cache/*
-rm $PWD/data_cache/*
-rm $PWD/run_stdout/*
-rm $PWD/optimize.log
-rm $PWD/results/optimized_params.npy
-rm $PWD/output/*
+if compgen -G $PWD/config_cache/* > /dev/null; then
+    rm $PWD/config_cache/*
+fi
+if compgen -G $PWD/data_cache/* > /dev/null; then
+    rm $PWD/data_cache/*
+fi
+if compgen -G $PWD/run_stdout/* > /dev/null; then
+    rm $PWD/run_stdout/*
+fi
+if [ -f $PWD/optimize.log ]; then
+    rm $PWD/optimize.log
+fi
+if [ -f $PWD/results/optimized_params.npy ]; then
+    rm $PWD/results/optimized_params.npy
+fi
+if compgen -G $PWD/output/* > /dev/null; then
+    rm $PWD/output/*
+fi
