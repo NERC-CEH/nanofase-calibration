@@ -7,7 +7,6 @@ import shutil
 import uuid
 import pandas as pd
 import numpy as np
-import multiprocessing
 import f90nml
 from netCDF4 import Dataset
 from optimparallel import minimize_parallel
@@ -21,6 +20,7 @@ parser.add_argument('--no-logall', dest='log_all', action='store_true')
 parser.add_argument('--maxworkers', '-mw', help='maximum number of processes that can be used',
                     type=int)
 parser.add_argument('--yearrange', '-yr', nargs=2, type=int, help='year range to run calibration for (inclusive)')
+parser.add_argument('--test', '-t', choices=['parallel', 'model'])
 parser.set_defaults(log_all=False)
 parser.set_defaults(yearrange=[2009,2012])
 args = parser.parse_args()
@@ -80,7 +80,7 @@ n_cells = var.count()
 # Function to run the NanoFASE model. This is the function passed to the optimisation function
 # and takes the parameters to calibrate as a parameter, returning the cost after running the
 # model and analysing the results
-def nf_model(params):
+def nf_model(params, test=None):
     # Unique run ID to keep track of parallel runs
     run_id = uuid.uuid4().hex
     
@@ -134,27 +134,33 @@ def nf_model(params):
             var[:] = param_2d
             nc.close()
             
-    # Run the model and save the output to the run_stdout dir
-    with open(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'), 'w') as file:
-        subprocess.run([
-            exe_path,
-            config_path,
-            bc_path,
-        ], check=True, text=True, stdout=file, stderr=file)
+    # Only run model if we're not testing
+    if test is None:
+        # Run the model and save the output to the run_stdout dir
+        with open(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'), 'w') as file:
+            subprocess.run([
+                exe_path,
+                config_path,
+                bc_path,
+            ], check=True, text=True, stdout=file, stderr=file)
 
-    # # Remove the output file - we only need it if there was an error, and 
-    # # an error will have already trigerred an exception
-    os.remove(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'))
-    
-    # # Evaluate the output and return the cost
-    df_out = pd.read_csv(os.path.join(cal_dir, f'output/output_water{run_id}.csv'),
-                         parse_dates=['datetime'])
-    # Return the cost, calculated from obs and sim data
-    cost_ = cost(df_out)
+        # # Remove the output file - we only need it if there was an error, and 
+        # # an error will have already trigerred an exception
+        os.remove(os.path.join(cal_dir, f'run_stdout/run_{run_id}.out'))
+        
+        # # Evaluate the output and return the cost
+        df_out = pd.read_csv(os.path.join(cal_dir, f'output/output_water{run_id}.csv'),
+                            parse_dates=['datetime'])
+        # Return the cost, calculated from obs and sim data
+        cost_ = cost(df_out)
+
+    # If this is a test, return an arbitrary cost without running the model
+    else:
+        cost_ = 42
 
     # If we're logging the params and costs of all iterations, then do so 
     if args.log_all:
-        with open(os.path.join(cal_dir, f'results/{run_id}.npz', 'wb')) as f:
+        with open(os.path.join(cal_dir, f'results/{run_id}.npz'), 'wb') as f:
             np.savez_compressed(f, cost=cost_, params=params0)
 
     # Remove the NetCDF files for this run
@@ -190,20 +196,24 @@ for param in param_names:
     flat = np.ravel(var[~var.mask])
     params0 = np.concatenate((params0, flat))
 
-# Actually do the optimization
-# result = minimize_parallel(fun=nf_model, x0=params0,
-#                            parallel={'max_workers': max_workers, 'verbose': True})
+# If this isn't a test, do the optimisation
+if args.test in [None, 'parallel']:
+    # Actually do the optimization
+    result = minimize_parallel(fun=nf_model, x0=params0, args=args.test,
+                               parallel={'max_workers': max_workers, 'verbose': True})
 
-cost = nf_model(params0)
-print(cost)
+    # Write the result to the optimize log
+    with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
+        f.write(f'Final cost (MAE): {result.fun}\n')
+        f.write(f'Number of evaluations: {result.nfev}\n')
+        f.write(f'Number of iterations: {result.nit}\n')
+        f.write(f'Successful? {result.success}')
 
-# # Write the result to the optimize log
-# with open(os.path.join(cal_dir, 'optimize.log'), 'a') as f:
-#     f.write(f'Final cost (MAE): {result.fun}\n')
-#     f.write(f'Number of evaluations: {result.nfev}\n')
-#     f.write(f'Number of iterations: {result.nit}\n')
-#     f.write(f'Successful? {result.success}')
+    # Write params to file, so we can re-run the optimized result
+    with open(os.path.join(cal_dir, 'results/optimized_params.npy'), 'wb') as f:
+        np.save(f, result.x)
 
-# # Write params to file, so we can re-run the optimized result
-# with open(os.path.join(cal_dir, 'results/optimized_params.npy'), 'wb') as f:
-#     np.save(f, result.x)
+# If this is a model test, just run the model once
+elif args.test == 'model':
+    cost = nf_model(params0)
+    print(cost)
