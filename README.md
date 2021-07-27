@@ -85,6 +85,10 @@ Have a look at the example observation data in `obs_data/` to see what format th
 
 Initial values for these parameters should be provided in the `data/x0.nc` file.
 
+## Using with Slurm and JASMIN
+
+A couple of example bash scripts - [scripts/slurm](scripts/slurm) and [scripts/slurm_test](scripts/slurm_test) - are provided to demonstrate how the calibration could be used with the Slurm Workload Manager (e.g. if you are using JASMIN). In essense, the bash script just needs to provide the desired `#SBATCH` commands and then run the optimize.py script. If you are planning to compile and run the model on JASMIN, you might find [these instructions](https://github.com/NERC-CEH/nanofase/blob/develop/doc/jasmin.md) useful. I have used JASMIN extensively to calibrate the model, and am [happy to give advice](mailto:sharrison@ceh.ac.uk) if you need help doing the same.
+
 ## Notes and caveats
 
 - Depending on your model scenario (e.g. spatial and temporal extent), the calibration could take *a very long time*. For a desktop computer calibrating the Thames catchment for 2009 to 2012, we could be talking months or years. Two approaches are suggested to alleviate this:

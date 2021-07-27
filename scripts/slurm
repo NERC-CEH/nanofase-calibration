@@ -6,4 +6,4 @@
 #SBATCH --time-min=48:00:00
 #SBATCH --ntasks=256
 
-python ../optimize.py --caldir ../ --exepath ~/nanofase/bin/main --maxworkers=256 
+python scripts/optimize.py --caldir . --exepath ~/nanofase/bin/main --maxworkers=256 
