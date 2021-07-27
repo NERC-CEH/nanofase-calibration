@@ -1,2 +1,9 @@
 #!/bin/bash
-#SBATCH --partition
+#SBATCH --partition=par-multi
+#SBATCH -o %j.out
+#SBATCH -e %j.err
+#SBATCH --time=48:00:00
+#SBATCH --time-min=48:00:00
+#SBATCH --ntasks=256
+
+python ../optimize.py --caldir ../ --exepath ~/nanofase/bin/main --maxworkers=256 
