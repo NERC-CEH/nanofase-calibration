@@ -64,7 +64,7 @@ include_attachment = .true.                             ! Should attachment be m
 sediment_layer_depth = 0.01, 0.01, 0.01, 0.01           ! Depth of each sediment layer. Array of length &allocatable_array_sizes > n_sediment_layers
 spm_size_classes = 0.002e-3, 0.06e-3, 0.2e-3, 0.6e-3, 2.0e-3    ! Upper bound of the SPM diameter in each binned size class [m]
 include_bed_sediment = .true.                           ! Should bed sediment be modelled?
-sediment_particle_densities = 1500                      ! Density of sediment particles in each fractional composition class [kg/m3]
+sediment_particle_densities = 1500, 2600                ! Density of sediment particles in each fractional composition class [kg/m3]
 /
 
 &sources
