@@ -165,7 +165,7 @@ def nf_model(params, test=None):
     # If we're logging the params and costs of all iterations, then do so 
     if args.log_all:
         with open(os.path.join(cal_dir, f'results/{run_id}.npz'), 'wb') as f:
-            np.savez_compressed(f, cost=cost_, params=params0)
+            np.savez_compressed(f, cost=cost_, params=params)
 
     # Remove the NetCDF files for this run
     for year in year_range:
